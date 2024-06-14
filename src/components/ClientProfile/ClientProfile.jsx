@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./ClientProfile.css";
 import getNearestMrt from "nearest-mrt";
 import fees from "../../Fees.jsx";
 import axios from "axios";
 import { DotLoader } from "react-spinners";
-import Swal from 'sweetalert2'
-
+import Swal from "sweetalert2";
 
 const Convert = () => {
   //Text output1 and output2 is used to generate formatted data
@@ -14,15 +13,24 @@ const Convert = () => {
   const [copy, setCopy] = useState("Copy to Clipboard");
   const [copy2, setCopy2] = useState("Copy to Clipboard");
   const [isLoading, setIsLoading] = useState(false);
-  const botToken = import.meta.env.VITE_TEST_TOKEN.replace(/"/g, '');
-  const academicChannel = import.meta.env.VITE_TEST_ACADEMIC.replace(/"/g, ''); 
-  const musicChannel = import.meta.env.VITE_TEST_MUSIC.replace(/"/g, '');
-  const sportsChannel = import.meta.env.VITE_TEST_SPORTS.replace(/"/g, '');
-  let origin = import.meta.env.VITE_TEST_IFRAME_ORIGIN;
-  const url = `https://api.telegram.org/bot${botToken}/sendMessage`
+  const botToken =
+    import.meta.env.VITE_TEST_TOKEN &&
+    import.meta.env.VITE_TEST_TOKEN.replace(/"/g, "");
+  const academicChannel =
+    import.meta.env.VITE_TEST_ACADEMIC &&
+    import.meta.env.VITE_TEST_ACADEMIC.replace(/"/g, "");
+  const musicChannel =
+    import.meta.env.VITE_TEST_MUSIC &&
+    import.meta.env.VITE_TEST_MUSIC.replace(/"/g, "");
+  const sportsChannel =
+    import.meta.env.VITE_TEST_SPORTS &&
+    import.meta.env.VITE_TEST_SPORTS.replace(/"/g, "");
+  // let origin = import.meta.env.VITE_TEST_IFRAME_ORIGIN;
+  let origin = "http://127.0.0.1:8000";
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
-  const formURL = 'https://docs.google.com/forms/d/e/1FAIpQLSdvn3QkUnGl7JX8WehOuHXdl8sijfnENOLgz9pKOIPCEh388g/viewform?usp=pp_url&entry.1366584600='
-
+  const formURL =
+    "https://docs.google.com/forms/d/e/1FAIpQLSdvn3QkUnGl7JX8WehOuHXdl8sijfnENOLgz9pKOIPCEh388g/viewform?usp=pp_url&entry.1366584600=";
 
   //Empty form
   const initialFormData = {
@@ -39,6 +47,11 @@ const Convert = () => {
     tutor2: false,
     tutor3: false,
     remarks: "",
+    internalRemarks: "",
+    manyTutorLink: "",
+    ClientName: "",
+    WhatsappNumber: "",
+    isTuitionCenter: false,
   };
 
   //Initialise form to be empty
@@ -167,7 +180,10 @@ const Convert = () => {
       };
     } else {
       // Extract postal code from the form
-      if (formData["postal"].length === 6 && /^\d{6}$/.test(formData["postal"])) {
+      if (
+        formData["postal"].length === 6 &&
+        /^\d{6}$/.test(formData["postal"])
+      ) {
         let clientPostal = "";
         clientPostal = formData["postal"];
         clientAddress = await getFullAddress(clientPostal);
@@ -183,16 +199,13 @@ const Convert = () => {
           Swal.fire({
             title: "The Internet?",
             text: "Network error! Please check your internet connection!",
-            icon: "question"
+            icon: "question",
           });
           setIsLoading(false);
           setTextOutput1("");
           setTextOutput2("");
           return;
-        } 
-        else if (clientAddress && clientAddress !== "Address not found") {
-          
-          
+        } else if (clientAddress && clientAddress !== "Address not found") {
           clientLatLong = [
             parseFloat(clientAddress.longitude),
             parseFloat(clientAddress.latitude),
@@ -213,62 +226,61 @@ const Convert = () => {
             // Check if nearestMRT is defined and has at least one element
             if (!formData["online"] && nearestMRT.result <= 0) {
               Swal.fire({
-                title: 'No MRT Station found',
-                text: 'No MRT station found within the specified radius!',
-                icon: 'error',
-                confirmButtonText: 'Cool'
-              })
+                title: "No MRT Station found",
+                text: "No MRT station found within the specified radius!",
+                icon: "error",
+                confirmButtonText: "Cool",
+              });
               setIsLoading(false);
               return;
             }
           } catch (error) {
             if (!formData["online"]) {
               Swal.fire({
-                title: 'No MRT Station found',
-                text: 'Error in finding nearest MRT!',
-                icon: 'error',
-                confirmButtonText: 'Cool'
-              })
-              
+                title: "No MRT Station found",
+                text: "Error in finding nearest MRT!",
+                icon: "error",
+                confirmButtonText: "Cool",
+              });
             }
             setIsLoading(false);
             return;
           }
         } else {
           Swal.fire({
-            title: 'No MRT Station found',
-            text: 'Cannot find nearest MRT due to invalid address!',
-            icon: 'error',
-            confirmButtonText: 'Cool'
-          })
+            title: "No MRT Station found",
+            text: "Cannot find nearest MRT due to invalid address!",
+            icon: "error",
+            confirmButtonText: "Cool",
+          });
           setIsLoading(false);
           return;
         }
       } else if (formData["postal"].length !== 6) {
         Swal.fire({
-          title: 'Postal Code',
-          text: 'Postal code must be 6 digit number!',
-          icon: 'error',
-          confirmButtonText: 'Cool'
-        })
+          title: "Postal Code",
+          text: "Postal code must be 6 digit number!",
+          icon: "error",
+          confirmButtonText: "Cool",
+        });
         setIsLoading(false);
         return;
       } else if (!/^\d{6}$/.test(formData["postal"])) {
         Swal.fire({
-          title: 'Postal Code!',
-          text: 'Postal Code must contain numbers only!',
-          icon: 'error',
-          confirmButtonText: 'Cool'
-        })
+          title: "Postal Code!",
+          text: "Postal Code must contain numbers only!",
+          icon: "error",
+          confirmButtonText: "Cool",
+        });
         setIsLoading(false);
         return;
       } else {
         Swal.fire({
-          title: 'Postal Code!',
-          text: 'Cannot find nearest MRT due to invalid address!',
-          icon: 'error',
-          confirmButtonText: 'Cool'
-        })
+          title: "Postal Code!",
+          text: "Cannot find nearest MRT due to invalid address!",
+          icon: "error",
+          confirmButtonText: "Cool",
+        });
         setIsLoading(false);
         return;
       }
@@ -392,46 +404,46 @@ const Convert = () => {
         Swal.fire({
           title: "Fees",
           text: "Fees not calculated, please key in fees manually!",
-          icon: "warning"
+          icon: "warning",
         });
       }
     };
     calculateFees();
-    
+
     try {
       clientLevel = clientLevel.charAt(0).toUpperCase() + clientLevel.slice(1);
       setCopy("Copy to Clipboard");
       setCopy2("Copy to Clipboard");
       //Set output for Telegram template
-      let TelegramTemplate = `${clientLevel + " " + clientSubject + tutorType + " @ " + nameOfNearestMrt
-        }\n\n${"Details of assignment"}\n${"Location: " + clientAddress.address
-        }\n${"Duration: " + clientFrequency}\n${"Timing: " + clientTimings}\n\n${"Fees: " + clientFees
-        }\n${"Commission: " + commission}\n\n${"Remarks:" + clientRemarks
-        }\n\n${interested_applicants}\n\n${"Code: " + codeGeneration(clientName, clientLevel, clientSubject)
-        }`;
+      let TelegramTemplate = `${
+        clientLevel + " " + clientSubject + tutorType + " @ " + nameOfNearestMrt
+      }\n\n${"Details of assignment"}\n${
+        "Location: " + clientAddress.address
+      }\n${"Duration: " + clientFrequency}\n${"Timing: " + clientTimings}\n\n${
+        "Fees: " + clientFees
+      }\n${"Commission: " + commission}\n\n${
+        "Remarks:" + clientRemarks
+      }\n\n${interested_applicants}\n\n${
+        "Code: " + codeGeneration(clientName, clientLevel, clientSubject)
+      }`;
+
       setTextOutput1(TelegramTemplate);
-      
-      let ManyTutorsTemplate = `${clientLevel + " " + clientSubject + tutorType + " @ " + nameOfNearestMrt
-        }\n\n${"Details of assignment"}\n${"Location: " + clientAddress.address
-        }\n${"Duration: " + clientFrequency}\n${"Timing: " + clientTimings}\n\n${"Fees: " + clientFees
-        }\n${"Commission: " + commission}\n\n${"Remarks:" + clientRemarks
-        }\n\n${"Interested applicants, please email your profile to contact@premiumtutors.sg with the following details:"}\n\n${"Code: " + codeGeneration(clientName, clientLevel, clientSubject)
-        }\n\n${"Full name:"}\n${"Age, Gender:"}\n${"Address:"}\n${"Contact Number:"}\n${"Qualifications:"}\n${"Current Occupation:"}\n${"Tuition Experience (in years):"}\n${"Brief description of experience in relevant subject(s):"}\n${"Preferred timings:"}\n${"Expected hourly rate:"}`;
-      
+
+      let ManyTutorsTemplate = `${
+        clientLevel + " " + clientSubject + tutorType + " @ " + nameOfNearestMrt
+      }\n\n${"Details of assignment"}\n${
+        "Location: " + clientAddress.address
+      }\n${"Duration: " + clientFrequency}\n${"Timing: " + clientTimings}\n\n${
+        "Fees: " + clientFees
+      }\n${"Commission: " + commission}\n\n${
+        "Remarks:" + clientRemarks
+      }\n\n${"Interested applicants, please email your profile to contact@premiumtutors.sg with the following details:"}\n\n${
+        "Code: " + codeGeneration(clientName, clientLevel, clientSubject)
+      }\n\n${"Full name:"}\n${"Age, Gender:"}\n${"Address:"}\n${"Contact Number:"}\n${"Qualifications:"}\n${"Current Occupation:"}\n${"Tuition Experience (in years):"}\n${"Brief description of experience in relevant subject(s):"}\n${"Preferred timings:"}\n${"Expected hourly rate:"}`;
       setTextOutput2(ManyTutorsTemplate);
 
       //Scroll to the Bottom of the page to see results
       setIsLoading(false);
-
-      window.top.postMessage(
-        {
-          type: "CREATE_ASSIGNMENT",
-          TelegramTemplate,
-          ManyTutorsTemplate,
-        },
-        origin
-      )
-
       window.scrollTo({
         top: 800,
         behavior: "smooth",
@@ -439,6 +451,32 @@ const Convert = () => {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const sendToWix = () => {
+    const {
+      internalRemarks,
+      manyTutorLink,
+      ClientName,
+      WhatsappNumber,
+      isTuitionCenter,
+    } = formData;
+    const submitFormData = {
+      internalRemarks: internalRemarks,
+      manyTutorLink: manyTutorLink,
+      ClientName: ClientName,
+      WhatsappNumber: WhatsappNumber,
+      isTuitionCenter: isTuitionCenter,
+      TelegramTemplate: textOutput1,
+    };
+    console.log(submitFormData, "TelegramTemplate");
+    window.top.postMessage(
+      {
+        type: "CREATE_ASSIGNMENT",
+        submitFormData,
+      },
+      origin
+    );
   };
 
   const convertTeleToMany = () => {
@@ -468,7 +506,6 @@ const Convert = () => {
     setTextOutput1(teleFormat);
   };
 
-
   const sendToAcademic = async () => {
     const academicId = academicChannel; // Add your Telegram chat ID here
     const message = textOutput1;
@@ -478,19 +515,19 @@ const Convert = () => {
     if ((extractedCode.match(/\d/g) || []).length < 3) {
       Swal.fire({
         title: "Check your Case Code!",
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
       return;
-    } 
+    }
 
     if (extractedFees === null) {
       Swal.fire({
         title: "Check your Fees!",
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
       return;
     }
@@ -500,38 +537,37 @@ const Convert = () => {
         [
           {
             text: "Apply Here",
-            url: `${formURL}` + extractedCode
+            url: `${formURL}` + extractedCode,
           },
           {
             text: "Filter Assignments",
-            url: "https://t.me/PremiumTutorsAssignmentBot?start="
-          }
-        ]
-      ]
+            url: "https://t.me/PremiumTutorsAssignmentBot?start=",
+          },
+        ],
+      ],
     };
-  
-    try {
 
+    try {
       await axios.post(url, {
         chat_id: academicId,
         text: message,
         parse_mode: "HTML",
         disable_web_page_preview: true,
-        reply_markup: JSON.stringify(inlineButton)
-    });
-      
+        reply_markup: JSON.stringify(inlineButton),
+      });
+
       Swal.fire({
-        title: 'Success',
-        text: 'Message sent to ACADEMIC Telegram channel!',
-        icon: 'success',
-        confirmButtonText: 'Cool'
+        title: "Success",
+        text: "Message sent to ACADEMIC Telegram channel!",
+        icon: "success",
+        confirmButtonText: "Cool",
       });
     } catch (error) {
       Swal.fire({
         title: error.message,
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
     }
   };
@@ -546,19 +582,19 @@ const Convert = () => {
     if ((extractedCode.match(/\d/g) || []).length < 3) {
       Swal.fire({
         title: "Check your Case Code!",
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
       return;
-    } 
+    }
 
     if (extractedFees === null) {
       Swal.fire({
         title: "Check your Fees!",
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
       return;
     }
@@ -568,48 +604,46 @@ const Convert = () => {
         [
           {
             text: "Apply Here",
-            url: `${formURL}` + extractedCode
+            url: `${formURL}` + extractedCode,
           },
           {
             text: "Filter Assignments",
-            url: "https://t.me/PremiumTutorsAssignmentBot?start="
-          }
-        ]
-      ]
+            url: "https://t.me/PremiumTutorsAssignmentBot?start=",
+          },
+        ],
+      ],
     };
-  
+
     try {
       await axios.post(url, {
         chat_id: academicId,
         text: message,
         parse_mode: "HTML",
         disable_web_page_preview: true,
-        reply_markup: JSON.stringify(inlineButton)
+        reply_markup: JSON.stringify(inlineButton),
       });
       await axios.post(url, {
         chat_id: musicId,
         text: message,
         parse_mode: "HTML",
         disable_web_page_preview: true,
-        reply_markup: JSON.stringify(inlineButton)
+        reply_markup: JSON.stringify(inlineButton),
       });
 
       Swal.fire({
-        title: 'Success',
-        text: 'Message sent to ACADEMIC & MUSIC Telegram channel!',
-        icon: 'success',
-        confirmButtonText: 'Cool'
+        title: "Success",
+        text: "Message sent to ACADEMIC & MUSIC Telegram channel!",
+        icon: "success",
+        confirmButtonText: "Cool",
       });
     } catch (error) {
       Swal.fire({
         title: error.message,
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
     }
-
-    
   };
 
   const sendToSports = async () => {
@@ -622,66 +656,65 @@ const Convert = () => {
     if ((extractedCode.match(/\d/g) || []).length < 3) {
       Swal.fire({
         title: "Check your Case Code!",
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
       return;
-    } 
+    }
 
     if (extractedFees === null) {
       Swal.fire({
         title: "Check your Fees!",
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
       return;
     }
-    
 
     const inlineButton = {
       inline_keyboard: [
         [
           {
             text: "Apply Here",
-            url: `${formURL}` + extractedCode
+            url: `${formURL}` + extractedCode,
           },
           {
             text: "Filter Assignments",
-            url: "https://t.me/PremiumTutorsAssignmentBot?start="
-          }
-        ]
-      ]
+            url: "https://t.me/PremiumTutorsAssignmentBot?start=",
+          },
+        ],
+      ],
     };
-  
+
     try {
       await axios.post(url, {
-      chat_id: academicId,
-      text: message,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-      reply_markup: JSON.stringify(inlineButton)
+        chat_id: academicId,
+        text: message,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+        reply_markup: JSON.stringify(inlineButton),
       });
       await axios.post(url, {
         chat_id: sportsId,
         text: message,
         parse_mode: "HTML",
         disable_web_page_preview: true,
-        reply_markup: JSON.stringify(inlineButton)
+        reply_markup: JSON.stringify(inlineButton),
       });
       Swal.fire({
-        title: 'Success',
-        text: 'Message sent to ACADEMIC & SPORTS Telegram channel!',
-        icon: 'success',
-        confirmButtonText: 'Cool'
+        title: "Success",
+        text: "Message sent to ACADEMIC & SPORTS Telegram channel!",
+        icon: "success",
+        confirmButtonText: "Cool",
       });
     } catch (error) {
       Swal.fire({
         title: error.message,
-        text: 'Failed to send message to Telegram channel!',
-        icon: 'error',
-        confirmButtonText: 'Okay'
+        text: "Failed to send message to Telegram channel!",
+        icon: "error",
+        confirmButtonText: "Okay",
       });
     }
   };
@@ -690,25 +723,43 @@ const Convert = () => {
     const codePattern = /Code:\s(\w+)/;
     const match = message.match(codePattern);
     return match ? match[1] : null;
-  }
+  };
 
   const extractFees = (message) => {
     const codePattern = /Fees:\s(.+)/;
     const match = message.match(codePattern);
     return match ? match[1] : null;
-  }
-  
+  };
+
   const ConfirmationTemplate = (e) => {
     setTextOutput1(e.target.value);
-    window.top.postMessage(
-      { type: "CONFIRM_TEMPLATE_CHANGE_VALUE", changeValue: e.target.value },
-      origin
-    );
     console.log(e.target.value, origin, "ss");
   };
 
+  window.addEventListener("message", function (event) {
+    // if (event.origin !== origin) {
+    //   console.warn("Received message from unknown origin:", event.origin);
+    //   return true;
+    // }
 
-  
+    setFormData({
+      ClientName: event.data.autofilledData.client_name
+        ? event.data.autofilledData.client_name
+        : "",
+      internalRemarks: event.data.autofilledData.internal_remarks
+        ? event.data.autofilledData.internal_remarks
+        : "",
+      WhatsappNumber: event.data.autofilledData.phone
+        ? event.data.autofilledData.phone
+        : "",
+      manyTutorLink: event.data.autofilledData.many_tutors_link
+        ? event.data.autofilledData.many_tutors_link
+        : "",
+      isTuitionCenter: event.data.autofilledData.is_corporate_assignment,
+    });
+    setTextOutput1(event.data.autofilledData.content);
+  });
+
   return (
     <div className="convert">
       <div className="convert-row-1">
@@ -862,8 +913,72 @@ const Convert = () => {
               onChange={handleInputChange}
               placeholder="Tutor to be patient"
             />
+            <div className="create-assignment-form-handler">
+              <label htmlFor="internalRemarks">Internal Remarks:</label>
+              <textarea
+                required
+                onChange={handleInputChange}
+                name="internalRemarks"
+                id="internalRemarks"
+                value={formData.internalRemarks}
+              ></textarea>
+              <label htmlFor="manyTutorLink">ManyTutor Link:</label>
+              <input
+                required
+                type="url"
+                name="manyTutorLink"
+                value={formData.manyTutorLink}
+                onChange={handleInputChange}
+              />
+              <div
+                className="client-phone-handler"
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  gap: "2rem",
+                }}
+              >
+                <div>
+                  <label htmlFor="ClientName">Client Name:</label>
+                  <input
+                    required
+                    id="ClientName"
+                    name="ClientName"
+                    type="text"
+                    value={formData.ClientName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="WhatsappNumber">Whatsapp Number:</label>
+                  <input
+                    required
+                    id="WhatsappNumber"
+                    name="WhatsappNumber"
+                    type="number"
+                    value={formData.WhatsappNumber}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              <div className="submit-handler">
+                <span>
+                  <input
+                    id="isTuitionCenter"
+                    name="isTuitionCenter"
+                    type="checkbox"
+                    value={formData.isTuitionCenter}
+                    checked={formData.isTuitionCenter == 1 ? true : false}
+                    onChange={handleInputChange}
+                  />
+                  <label htmlFor="isTuitionCenter">
+                    This is a Tuition Center Assignment.
+                  </label>
+                </span>
+              </div>
+            </div>
             <div className="button">
-                <input type="submit" id="submit" value="Submit" />
+              <input type="submit" id="submit" value="Generate" />
               <button
                 type="button"
                 onClick={handleReset}
@@ -922,7 +1037,7 @@ const Convert = () => {
               <br />
               <p>Sports: private, pair, group</p>
             </div>
-          </div>  
+          </div>
         </div>
         {/* First row Right section (form-output) */}
       </div>
@@ -930,7 +1045,7 @@ const Convert = () => {
       {isLoading && (
         <div className="loading-overlay">
           <div className="loader-container">
-          <DotLoader color="#36d7b7" />
+            <DotLoader color="#36d7b7" />
           </div>
         </div>
       )}
@@ -963,7 +1078,6 @@ const Convert = () => {
               >
                 {copy}
               </button>
-
             </div>
           </div>
         </div>
@@ -997,23 +1111,15 @@ const Convert = () => {
           </div>
         </div>
       </div>
-
       <div className="send-telegram">
         <h1>Send to Telegram Channels</h1>
         <div className="channel">
-          <button onClick={sendToAcademic}>
-            ACADEMIC
-          </button>
-          <button onClick={sendToMusic}>
-            MUSIC
-          </button>
-          <button onClick={sendToSports}>
-            SPORTS
-          </button>
+          <button onClick={sendToWix}>SUBMIT TO WIX</button>
+          <button onClick={sendToAcademic}>ACADEMIC</button>
+          <button onClick={sendToMusic}>MUSIC</button>
+          <button onClick={sendToSports}>SPORTS</button>
         </div>
-        
       </div>
-
     </div>
   );
 };
